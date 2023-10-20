@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include "main.h"
+#include <vector>
 
 using namespace std;
 
@@ -10,7 +11,7 @@ using namespace std;
 // 
 // array for pushable blocks
 
-void LoadLevel(int levelNumber) 
+Level LoadLevel(int levelNumber) 
 {
     string filePath = "Levels/Level" + to_string(levelNumber) + ".txt";
     string textLine;
@@ -27,12 +28,11 @@ void LoadLevel(int levelNumber)
     }
 
     Map levelBase(mapWidth, mapHeight);
+    std::vector<PushableBlock> blocks;
 
-    // reset getline()
+    // reset getline() function
     rawLevelData.clear();
     rawLevelData.seekg(0);
-
-    cout << mapHeight << endl << mapWidth << endl;
 
     int currentLineIndex = 0;
     while (getline(rawLevelData, textLine)) {
@@ -42,15 +42,68 @@ void LoadLevel(int levelNumber)
             }
         }
 
-        cout << textLine << endl;
-
         currentLineIndex++;
     }
 
+    // close file
     rawLevelData.close();
+
+    Level levelData(levelBase, blocks);
+
+
+    // printing map
+    /*for (int y = 0; y < levelBase.GetHeight(); y++) {
+        for (int x = 0; x < levelBase.GetWidth(); x++) {
+            MapTile tile = levelBase.Get(x, y);
+            if (tile == MapTile::EMPTY) {
+                cout << ' ';
+            }
+            else if (tile == MapTile::WALL) {
+                cout << '#';
+            }
+        }
+        cout << endl;
+    }*/
+
+    return levelData;
 }
 
 int main()
 {
-    LoadLevel(1);
+    Level levelData = LoadLevel(1);
+    Map levelBase = levelData.levelBase;
+
+    const int blockTextureSize = 5;
+    vector<vector<string>> screenRender;
+
+    screenRender.resize((levelBase.GetHeight() + 1) * blockTextureSize, std::vector<string>((levelBase.GetWidth() + 1) * blockTextureSize, "  "));
+
+    for (int y = 0; y < levelBase.GetHeight(); y++) {
+        for (int x = 0; x < levelBase.GetWidth(); x++) {
+            MapTile tile = levelBase.Get(x, y);
+            string tileChar = "  ";
+
+            if (tile == MapTile::EMPTY) {
+                tileChar = "  ";
+            }
+            else if (tile == MapTile::WALL) {
+                tileChar = "##";
+            }
+
+            for (int i = 0; i < blockTextureSize; i++) {
+                for (int j = 0; j < blockTextureSize; j++) {
+                    screenRender[y * blockTextureSize + i][x * blockTextureSize + j] = tileChar;
+                }
+            }
+        }
+    }
+
+    for (int y = 0; y < levelBase.GetHeight() * blockTextureSize; y++) {
+        for (int x = 0; x < levelBase.GetWidth() * blockTextureSize; x++) {
+            cout << screenRender[y][x];
+        }
+        cout << endl;
+    }
+
+
 }

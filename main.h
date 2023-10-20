@@ -21,14 +21,27 @@ private:
 
 	size_t index(int x, int y) const { return x + _mapWidth * y; }
 public:
+	Map() {
+		_mapWidth = 1;
+		_mapHeight = 1;
+
+		world = new MapTile[1]();
+	}
+
 	Map(int width, int height) {
 		_mapWidth = width;
 		_mapHeight = height;
 
-		world = new MapTile[width * height];
-		for (int i = 0; i < width * height; i++) {
-			world[i] = MapTile::EMPTY;
-		}
+		world = new MapTile[width * height]();
+		//for (int i = 0; i < width * height; i++) {
+		//	/*if (i == 2) {
+		//		world[i] = MapTile::FLOOR;
+		//	} else {
+		//		world[i] = MapTile::EMPTY;
+		//	}*/
+
+		//	world[i] = MapTile::FLOOR;
+		//}
 	}
 
 	MapTile Get(int x, int y) {
@@ -36,8 +49,7 @@ public:
 	}
 
 	void Set(int x, int y, MapTile value) {
-		//world[index(x, y)] = value;
-		world[2] = value;
+		world[index(x, y)] = value;
 	}
 
 	int GetWidth() {
@@ -55,4 +67,9 @@ struct PushableBlock {
 struct Level {
 	Map levelBase;
 	std::vector<PushableBlock> blocks;
+
+	Level(Map levelBase_, std::vector<PushableBlock> blocks_) {
+		levelBase = levelBase_;
+		blocks = blocks_;
+	}
 };
