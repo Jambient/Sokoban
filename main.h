@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 
-enum MapTile
+enum class MapTile
 {
 	EMPTY,
 	WALL,
@@ -11,6 +11,12 @@ enum MapTile
 struct Vector2 {
 	int x = 0;
 	int y = 0;
+};
+
+struct Color {
+	int r = 0;
+	int g = 0;
+	int b = 0;
 };
 
 class Map {
@@ -33,15 +39,6 @@ public:
 		_mapHeight = height;
 
 		world = new MapTile[width * height]();
-		//for (int i = 0; i < width * height; i++) {
-		//	/*if (i == 2) {
-		//		world[i] = MapTile::FLOOR;
-		//	} else {
-		//		world[i] = MapTile::EMPTY;
-		//	}*/
-
-		//	world[i] = MapTile::FLOOR;
-		//}
 	}
 
 	MapTile Get(int x, int y) {
@@ -60,16 +57,20 @@ public:
 	}
 };
 
-struct PushableBlock {
+struct PushableBox {
 	Vector2 position;
 };
 
 struct Level {
 	Map levelBase;
-	std::vector<PushableBlock> blocks;
+	std::vector<PushableBox> boxes;
+	Vector2 playerPosition;
+	std::vector<Vector2> goals;
 
-	Level(Map levelBase_, std::vector<PushableBlock> blocks_) {
+	Level(Map levelBase_, std::vector<PushableBox> boxes_, std::vector<Vector2> goals_, Vector2 playerPosition_) {
 		levelBase = levelBase_;
-		blocks = blocks_;
+		boxes = boxes_;
+		playerPosition = playerPosition_;
+		goals = goals_;
 	}
 };

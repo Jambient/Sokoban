@@ -127,10 +127,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="blocks.cpp" />
+    <ClCompile Include="rendering.cpp" />
     <ClCompile Include="Sokoban.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ansi.h" />
+    <ClInclude Include="blocks.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="rendering.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
