@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ansi.cpp" />
     <ClCompile Include="blocks.cpp" />
     <ClCompile Include="rendering.cpp" />
     <ClCompile Include="Sokoban.cpp" />

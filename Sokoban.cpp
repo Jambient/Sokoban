@@ -5,6 +5,7 @@
 #include "main.h"
 #include "blocks.h"
 #include "rendering.h"
+#include "ansi.h"
 #include <vector>
 
 using namespace std;
@@ -127,27 +128,51 @@ bool isLevelSolved(Level levelData) {
     return isSolved;
 }
 
+void showStartScreen() {
+    cout << ".----------------.  .----------------.  .----------------.  .----------------.  .----------------.  .----------------.  .-----------------." << endl
+        << "| .--------------. || .--------------. || .--------------. || .--------------. || .--------------. || .--------------. || .--------------. |" << endl
+        << "| |    _______   | || |     ____     | || |  ___  ____   | || |     ____     | || |   ______     | || |      __      | || | ____  _____  | |" << endl
+        << "| |   /  ___  |  | || |   .'    `.   | || | |_  ||_  _|  | || |   .'    `.   | || |  |_   _ \\    | || |     /  \\     | || ||_   \\ |_  _| | |" << endl
+        << "| |  |  (__ \\_|  | || |  /  .--.  \\  | || |   | |_/ /    | || |  /  .--.  \\  | || |    | |_) |   | || |    / /\\ \\    | || |  |   \\ | |   | |" << endl
+        << "| |   '.___`-.   | || |  | |    | |  | || |   |  __'.    | || |  | |    | |  | || |    |  __'.   | || |   / ____ \\   | || |  | |\\ \\| |   | |" << endl
+        << "| |  |`\\____) |  | || |  \\  `--'  /  | || |  _| |  \\ \\_  | || |  \\  `--'  /  | || |   _| |__) |  | || | _/ /    \\ \\_ | || | _| |_\\   |_  | |" << endl
+        << "| |  |_______.'  | || |   `.____.'   | || | |____||____| | || |   `.____.'   | || |  |_______/   | || ||____|  |____|| || ||_____|\\____| | |" << endl
+        << "| |              | || |              | || |              | || |              | || |              | || |              | || |              | |" << endl
+        << "| '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' |" << endl
+        << " '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------'" << endl << endl;
+
+    cout << "Press enter to continue...";
+    cin.ignore();
+}
+
 int main()
 {
     initialiseBlocks();
+
+    showStartScreen();
+    clearScreen();
+
+    // show level menu
+    for (int i = 0; i < 7; i++) {
+        Vector2 iconPosition = { (i % 4) * 10 + 1, i < 4 ? 1 : 8 };
+        cout << moveCursorToPosition(iconPosition);
+        cout << "*------*";
+        cout << moveCursorToPosition({iconPosition.x, iconPosition.y + 1});
+        cout << "|      |";
+        cout << moveCursorToPosition({ iconPosition.x, iconPosition.y + 2 });
+        cout << "|  " << (i + 1 < 10 ? "0" + to_string(i + 1) : to_string(i + 1)) << "  |";
+        cout << moveCursorToPosition({ iconPosition.x, iconPosition.y + 3 });
+        cout << "|      |";
+        cout << moveCursorToPosition({ iconPosition.x, iconPosition.y + 4 });
+        cout << "*------*";
+    }
+
+    Sleep(50000);
 
     Level levelData = LoadLevel(1);
 
     Vector2 previousPlayerPosition = levelData.playerPosition;
     bool wasKeyPressed = false;
-
-    // show level menu
-    for (int i = 0; i < 7; i++) {
-        Vector2 iconPosition = { (i < 4 ? 1 : 5), (i % 4) * 6 + 1 };
-        cout << "\033[" << iconPosition.x << ";" << iconPosition.y << "H";
-        cout << "*---*";
-        cout << "\033[" << iconPosition.x + 1 << ";" << iconPosition.y << "H";
-        cout << "| " << i + 1 << " |";
-        cout << "\033[" << iconPosition.x + 2 << ";" << iconPosition.y << "H";
-        cout << "*---*";
-    }
-
-    Sleep(2000);
 
     clearScreen();
     renderScreen(levelData);
