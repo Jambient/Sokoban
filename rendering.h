@@ -6,6 +6,14 @@ void resizeScreenRender(int width, int height);
 
 void clearScreen();
 
-void fixRendering();
+void resetRendering();
 
-void renderScreen(Level levelData);
+void renderLevel(Level levelData, bool updateScreen = true);
+
+void updateScreenRender();
+
+void forcePixelChange(Color color, Vector2 position, std::string content);
+
+void showUI(std::vector<std::string>& lines);
+
+void renderLighting(Vector2 lightPosition, int lightStrength);

@@ -10,10 +10,12 @@ void initialiseBlocks() {
 	Color BRICK_RED = { 170, 74, 68 };
 	Color DARK_BRICK_RED = { 160, 64, 58 };
 	Color DARK_GRAY = { 30, 30, 30 };
+	Color GRAY = { 40, 40, 40 };
+	Color LIGHT_GRAY = { 50, 50, 50 };
 	Color WHITE = { 255, 255, 255 };
 	Color BROWN = { 150, 75, 0 };
 	Color DARK_BROWN = { 130, 55, 0 };
-	Color GREEN = { 0, 100, 0 };
+	Color GREEN = { 0, 150, 0 };
 
 	// empty
 	blockData.texture = {
@@ -38,23 +40,30 @@ void initialiseBlocks() {
 	blockData = Block();
 
 	// floor
-	blockData.texture = {
+	/*blockData.texture = {
 		{DARK_GRAY, DARK_GRAY, DARK_GRAY, DARK_GRAY, DARK_GRAY},
 		{DARK_GRAY, DARK_GRAY, DARK_GRAY, DARK_GRAY, DARK_GRAY},
 		{DARK_GRAY, DARK_GRAY, DARK_GRAY, DARK_GRAY, DARK_GRAY},
 		{DARK_GRAY, DARK_GRAY, DARK_GRAY, DARK_GRAY, DARK_GRAY},
 		{DARK_GRAY, DARK_GRAY, DARK_GRAY, DARK_GRAY, DARK_GRAY}
+	};*/
+	blockData.texture = {
+		{DARK_GRAY, GRAY, DARK_GRAY, DARK_GRAY, LIGHT_GRAY},
+		{DARK_GRAY, LIGHT_GRAY, DARK_GRAY, GRAY, DARK_GRAY},
+		{GRAY, DARK_GRAY, DARK_GRAY, DARK_GRAY, LIGHT_GRAY},
+		{DARK_GRAY, DARK_GRAY, GRAY, DARK_GRAY, DARK_GRAY},
+		{DARK_GRAY, GRAY, LIGHT_GRAY, DARK_GRAY, GRAY}
 	};
 	blocks[2] = blockData;
 	blockData = Block();
 
 	// player
 	blockData.texture = {
-		{BLANK, WHITE, WHITE, WHITE, BLANK},
+		{WHITE, WHITE, WHITE, WHITE, WHITE},
+		{WHITE, GRAY, WHITE, GRAY, WHITE},
 		{WHITE, WHITE, WHITE, WHITE, WHITE},
 		{WHITE, WHITE, WHITE, WHITE, WHITE},
-		{WHITE, WHITE, WHITE, WHITE, WHITE},
-		{BLANK, WHITE, WHITE, WHITE, BLANK}
+		{WHITE, WHITE, WHITE, WHITE, WHITE}
 	};
 	blocks[3] = blockData;
 	blockData = Block();

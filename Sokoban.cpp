@@ -67,6 +67,14 @@ Level LoadLevel(int levelNumber)
             else if (symbol == '.') {
                 goals.push_back({ i, currentLineIndex });
             }
+            else if (symbol == '*') {
+                goals.push_back({ i, currentLineIndex });
+                boxes.push_back({ {i, currentLineIndex} });
+            }
+            else if (symbol == '+') {
+                goals.push_back({ i, currentLineIndex });
+                playerPosition = { i, currentLineIndex };
+            }
         }
 
         currentLineIndex++;
@@ -145,41 +153,232 @@ void showStartScreen() {
     cin.ignore();
 }
 
-int main()
-{
-    initialiseBlocks();
+string asciiNumbers[10][6] = {
+    {
+        " _____ ",
+        "|  _  |",
+        "| |/' |",
+        "|  /| |",
+        "\\ |_/ /",
+        " \\___/ "
+    },
+    {
+        " __  ",
+        "/  | ",
+        "`| | ",
+        " | | ",
+        "_| |_",
+        "\\___/"
+    },
+    {
+        " _____ ",
+        "/ __  \\",
+        "`' / /'",
+        "  / /  ",
+        "./ /___",
+        "\\_____/"
+    },
+    {
+        " _____ ",
+        "|____ |",
+        "    / /",
+        "    \\ \\",
+        ".___/ /",
+        "\\____/ "
+    },
+    {
+        "   ___ ",
+        "  /   |",
+        " / /| |",
+        "/ /_| |",
+        "\\___  |",
+        "    |_/"
+    },
+    {
+        " _____ ",
+        "|  ___|",
+        "|___ \\ ",
+        "    \\ \\",
+        "/\\__/ /",
+        "\\____/ "
+    },
+    {
+        "  ____ ",
+        " / ___|",
+        "/ /___ ",
+        "| ___ \\",
+        "| \\_/ |",
+        "\\_____/"
+    },
+    {
+        " ______",
+        "|___  /",
+        "   / / ",
+        "  / /  ",
+        "./ /   ",
+        "\\_/    "
+    },
+    {
+        " _____ ",
+        "|  _  |",
+        " \\ V / ",
+        " / _ \\ ",
+        "| |_| |",
+        "\\_____/"
+    },
+    {
+        " _____ ",
+        "|  _  |",
+        "| |_| |",
+        "\\____ |",
+        ".___/ /",
+        "\\____/ "
+    }
+};
 
-    showStartScreen();
-    clearScreen();
+int currentLevelUnlock = 0;
 
-    // show level menu
-    for (int i = 0; i < 7; i++) {
-        Vector2 iconPosition = { (i % 4) * 10 + 1, i < 4 ? 1 : 8 };
-        cout << moveCursorToPosition(iconPosition);
-        cout << "*------*";
-        cout << moveCursorToPosition({iconPosition.x, iconPosition.y + 1});
-        cout << "|      |";
-        cout << moveCursorToPosition({ iconPosition.x, iconPosition.y + 2 });
-        cout << "|  " << (i + 1 < 10 ? "0" + to_string(i + 1) : to_string(i + 1)) << "  |";
-        cout << moveCursorToPosition({ iconPosition.x, iconPosition.y + 3 });
-        cout << "|      |";
-        cout << moveCursorToPosition({ iconPosition.x, iconPosition.y + 4 });
-        cout << "*------*";
+int printNumber(int num, Vector2 position) {
+    int longestLine = 0;
+    for (int i = 0; i < 6; i++) {
+        string line = asciiNumbers[num][i];
+        cout << moveCursorToPosition({ position.x, position.y + i });
+        cout << line;
+        if (line.size() > longestLine) {
+            longestLine = line.size();
+        }
+    }
+    return longestLine;
+}
+
+void showMoves(Level levelData, int moves) {
+    string numStr = to_string(moves);
+    int xPos = 1;
+    int yPos = (levelData.levelBase.GetHeight() + 1) * blockTextureSize;
+
+    for (int i = numStr.size(); i < 4; i++) {
+        numStr.insert(numStr.begin(), '0');
     }
 
-    Sleep(50000);
+    for (int y = 0; y < 6; y++) {
+        cout << moveCursorToPosition({ xPos, yPos + y });
+        cout << string(50, ' ');
+    }
 
-    Level levelData = LoadLevel(1);
+    int totalNumLength = 0;
+    for (char c : numStr) {
+        totalNumLength += printNumber(c - '0', { xPos + totalNumLength + 2, yPos });
+    }
+    cout << moveCursorToPosition({ xPos, yPos - 1 });
+    cout << "NUMBER OF MOVES:";
+}
 
+string* numberToAscii(int num) {
+    static string ascii[6];
+    string numStr = to_string(num);
+    int longestLine = 0;
+
+    if (numStr.length() < 2) {
+        numStr.insert(numStr.begin(), '0');
+    }
+
+    //// get first number longest line
+    //for (int i = 0; i < 6; i++) {
+    //    int lineLength = asciiNumbers[numStr[0] - '0'][i].length();
+    //    if (lineLength > longestLine) {
+    //        longestLine = lineLength;
+    //    }
+    //}
+
+    //// create first number
+    //for (int i = 0; i < 6; i++) {
+    //    string line = asciiNumbers[numStr[0] - '0'][i];
+    //    ascii[i] = line + string((longestLine - line.length()) + 1, ' ');
+    //}
+    //
+    //// create second number
+    //for (int i = 0; i < 6; i++) {
+    //    string line = asciiNumbers[numStr[1] - '0'][i];
+    //    ascii[i] += line;
+    //}
+    for (int i = 0; i < 6; i++) {
+        ascii[i] = asciiNumbers[numStr[0] - '0'][i] + ' ' + asciiNumbers[numStr[1] - '0'][i];
+    }
+
+    return ascii;
+}
+
+void renderLevelStatusPixels(Level levelData) {
+    for (int y = 0; y < 3; y++) {
+        for (int x = 0; x < 5; x++) {
+            Vector2 pixelPos = { (2 + x * 2) * blockTextureSize + 2, (2 + y * 2) * blockTextureSize + 2 };
+            if ((pixelPos.x - 2) / blockTextureSize == levelData.playerPosition.x && (pixelPos.y - 2) / blockTextureSize == levelData.playerPosition.y) {
+                continue;
+            }
+            Color pixelColor = { 0, 200, 0 };
+            int levelNum = ((pixelPos.x - 4) / blockTextureSize) / 2 + 1 + 5 * (((pixelPos.y - 4) / blockTextureSize) / 2);
+            if (levelNum == currentLevelUnlock + 1) {
+                pixelColor = { 50, 50, 255 };
+            }
+            else  if (levelNum > currentLevelUnlock + 1) {
+                pixelColor = { 200, 0, 0 };
+            }
+
+            forcePixelChange(pixelColor, pixelPos, "  ");
+        }
+    }
+}
+
+int showLevelMenu() {
+    Level levelData = LoadLevel(0);
+    bool hasChosenLevel = false;
+    int chosenLevelNum = 0;
     Vector2 previousPlayerPosition = levelData.playerPosition;
     bool wasKeyPressed = false;
 
-    clearScreen();
-    renderScreen(levelData);
+    renderLevel(levelData, false);
+    renderLevelStatusPixels(levelData);
+    updateScreenRender();
 
-    while (!isLevelSolved(levelData)) {
+    while (!hasChosenLevel) {
         if (!(levelData.playerPosition.x == previousPlayerPosition.x && levelData.playerPosition.y == previousPlayerPosition.y)) {
-            renderScreen(levelData);
+            renderLevel(levelData, false);
+            renderLevelStatusPixels(levelData);
+            //renderLighting({levelData.playerPosition.x * blockTextureSize + 2, levelData.playerPosition.y * blockTextureSize + 2}, 20);
+
+            if (levelData.playerPosition.x % 2 == 0 && levelData.playerPosition.y % 2 == 0) {
+                chosenLevelNum = (levelData.playerPosition.x - 2) / 2 + 1 + 5 * ((levelData.playerPosition.y - 2) / 2);
+
+                string* levelNumAscii = numberToAscii(chosenLevelNum);
+                int lineLength = levelNumAscii[0].length() + 1;
+                vector<string> levelUI;
+
+                // create level ui
+                levelUI.push_back('*' + string(lineLength + 4, '-') + '*');
+                levelUI.push_back("|  " + string(lineLength, ' ') + "  |");
+                levelUI.push_back("|  " + string((lineLength - 5) / 2, ' ') + "LEVEL" + string((lineLength - 5) - ((lineLength - 5) / 2), ' ') + "  |");
+                for (int i = 0; i < 6; i++) {
+                    string line = levelNumAscii[i];
+                    levelUI.push_back("|  " + line + "   |");
+                }
+                levelUI.push_back("|  " + string(lineLength, ' ') + "  |");
+
+                string uiText = "COMPLETED";
+                if (chosenLevelNum == currentLevelUnlock + 1) {
+                    uiText = "UNCOMPLETED";
+                }
+                else if (chosenLevelNum > currentLevelUnlock + 1) {
+                    uiText = "LOCKED";
+                }
+
+                levelUI.push_back("|  " + string((lineLength - uiText.length()) / 2, ' ') + uiText + string((lineLength - uiText.length()) - ((lineLength - uiText.length()) / 2), ' ') + "  |");
+                levelUI.push_back("|  " + string(lineLength, ' ') + "  |");
+                levelUI.push_back('*' + string(lineLength + 4, '-') + '*');
+
+                showUI(levelUI);
+            }
+
+            updateScreenRender();
         }
 
         if (wasKeyPressed) {
@@ -193,29 +392,148 @@ int main()
         if ((GetKeyState('W') & 0x8000)) {
             handleMovement(levelData, { 0, -1 });
             wasKeyPressed = true;
-        } else if ((GetKeyState('S') & 0x8000)) {
+        }
+        else if ((GetKeyState('S') & 0x8000)) {
             handleMovement(levelData, { 0, 1 });
             wasKeyPressed = true;
-        } else if ((GetKeyState('A') & 0x8000)) {
+        }
+        else if ((GetKeyState('A') & 0x8000)) {
             handleMovement(levelData, { -1, 0 });
             wasKeyPressed = true;
-        } else if ((GetKeyState('D') & 0x8000)) {
+        }
+        else if ((GetKeyState('D') & 0x8000)) {
             handleMovement(levelData, { 1, 0 });
             wasKeyPressed = true;
         }
-        else if ((GetKeyState('R') & 0x8000)) { // reset level
-            levelData = LoadLevel(1);
+        else if ((GetKeyState('F') & 0x8000)) { // fix button incase rendering breaks (when resizing screen)
+            resetRendering();
+            renderLevel(levelData, false);
+            renderLevelStatusPixels(levelData);
+            updateScreenRender();
             wasKeyPressed = true;
         }
-        else if ((GetKeyState('F') & 0x8000)) { // fix button incase rendering breaks (when resizing screen)
-            fixRendering();
-            renderScreen(levelData);
-            wasKeyPressed = true;
+        else if ((GetKeyState(VK_RETURN) & 0x8000)) {
+            if (levelData.playerPosition.x % 2 == 0 && levelData.playerPosition.y % 2 == 0 && chosenLevelNum <= currentLevelUnlock + 1) {
+                hasChosenLevel = true;
+            }
         }
     }
 
-    renderScreen(levelData);
-    Sleep(2000);
+    return chosenLevelNum;
+}
+
+void loadUserData() {
+    ifstream userData("UserData.txt");
+    if (userData.is_open()) {
+        string unlockedLevelsNum;
+        getline(userData, unlockedLevelsNum);
+        currentLevelUnlock = stoi(unlockedLevelsNum);
+    }
+    userData.close();
+}
+
+int main()
+{
+    initialiseBlocks();
+    loadUserData();
+
+    showStartScreen();
     clearScreen();
-    cout << "LEVEL COMPLETE!";
+
+    Vector2 previousPlayerPosition;
+    bool wasKeyPressed;
+    int moves;
+    bool hasQuitLevel;
+    
+    while (true) {
+        int chosenLevel = showLevelMenu();
+
+        // play level
+        int levelNum = chosenLevel;
+        Level levelData = LoadLevel(levelNum);
+
+        previousPlayerPosition = levelData.playerPosition;
+        wasKeyPressed = false;
+        hasQuitLevel = false;
+        moves = 0;
+
+        resetRendering();
+        clearScreen();
+        renderLevel(levelData);
+        showMoves(levelData, moves);
+
+        while (!isLevelSolved(levelData) && !hasQuitLevel) {
+            if (!(levelData.playerPosition.x == previousPlayerPosition.x && levelData.playerPosition.y == previousPlayerPosition.y)) {
+                renderLevel(levelData);
+
+                moves += 1;
+                showMoves(levelData, moves);
+            }
+
+            if (wasKeyPressed) {
+                Sleep(150);
+                wasKeyPressed = false;
+            }
+
+            previousPlayerPosition.x = levelData.playerPosition.x;
+            previousPlayerPosition.y = levelData.playerPosition.y;
+
+            if ((GetKeyState('W') & 0x8000)) {
+                handleMovement(levelData, { 0, -1 });
+                wasKeyPressed = true;
+            }
+            else if ((GetKeyState('S') & 0x8000)) {
+                handleMovement(levelData, { 0, 1 });
+                wasKeyPressed = true;
+            }
+            else if ((GetKeyState('A') & 0x8000)) {
+                handleMovement(levelData, { -1, 0 });
+                wasKeyPressed = true;
+            }
+            else if ((GetKeyState('D') & 0x8000)) {
+                handleMovement(levelData, { 1, 0 });
+                wasKeyPressed = true;
+            }
+            else if ((GetKeyState('R') & 0x8000)) { // reset level
+                levelData = LoadLevel(levelNum);
+                moves = 0;
+                renderLevel(levelData);
+                showMoves(levelData, moves);
+                previousPlayerPosition.x = levelData.playerPosition.x;
+                previousPlayerPosition.y = levelData.playerPosition.y;
+                wasKeyPressed = true;
+            }
+            else if ((GetKeyState('F') & 0x8000)) { // fix button incase rendering breaks (when resizing screen)
+                resetRendering();
+                renderLevel(levelData);
+                showMoves(levelData, moves);
+                wasKeyPressed = true;
+            }
+            else if ((GetKeyState(VK_BACK) & 0x8000)) { // leave level
+                hasQuitLevel = true;
+            }
+        }
+
+        if (!hasQuitLevel) {
+            renderLevel(levelData);
+            for (int y = 0; y < levelData.levelBase.GetHeight() * blockTextureSize; y++) {
+                for (int x = 0; x < levelData.levelBase.GetWidth() * blockTextureSize; x++) {
+                    if (x % 2 == 0) {
+                        Sleep(2);
+                    }
+                    forcePixelChange({ 1, 1, 1 }, { x, y }, "  ");
+                    updateScreenRender();
+                }
+            }
+
+            currentLevelUnlock = max(currentLevelUnlock, chosenLevel);
+
+            ofstream userData("UserData.txt");
+            userData << currentLevelUnlock;
+            userData.close();
+        }
+
+        resetRendering();
+        clearScreen();
+    }
 }
