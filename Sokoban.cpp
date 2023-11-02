@@ -10,10 +10,7 @@
 
 using namespace std;
 
-// 2d map array of walls and floors
-// floodfill map array to generate floors
-// 
-// array for pushable blocks
+int currentLevelUnlock = 0;
 
 void FloodFillRecursive(Map level, Vector2 position) {
     if (level.Get(position.x, position.y) != MapTile::EMPTY) { return; }
@@ -235,8 +232,6 @@ string asciiNumbers[10][6] = {
         "\\____/ "
     }
 };
-
-int currentLevelUnlock = 0;
 
 int printNumber(int num, Vector2 position) {
     int longestLine = 0;

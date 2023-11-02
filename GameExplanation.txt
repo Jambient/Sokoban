@@ -1,0 +1,20 @@
+This is the explanation file for my assessment 2 game.
+
+This game is a console version of the popular puzzle game from 1981 called "Sokoban". 
+In this game, each puzzle consists of a map, boxes and goal points. Each box must be moved onto
+its corresponding goal point. Boxes can only be pushed and cannot be pushed into spaces containing a wall or another box.
+This means you cannot push 2 or more boxes at the same time.
+
+Controls:
+  W	  :  Move Up
+  A	  :  Move Left
+  S	  :  Move Down
+  D	  :  Move Right
+  R	  :  Restart Level
+  F	  :  Fix Rendering (IMPORTANT)
+  ENTER	  :  Select Level
+  RETURN  :  Exit Level
+
+The control marked important is due to a rendering issue with the terminal console related to text wrapping. When the console is resized to a smaller size
+than the current render, the whole terminal will become blank due to the ANSI modifiers breaking over the wrapping. I have added a bandaid fix which rebuilds
+the current render when you press F.
