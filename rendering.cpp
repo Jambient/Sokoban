@@ -22,6 +22,8 @@ std::vector<std::vector<RenderTile>> previousScreenRender;
 std::vector<ChangedTile> changedTiles;
 Color BLACK = { 0, 0, 0 };
 
+bool SHOW_DEBUG = false;
+
 void resizeScreenRender(int width, int height) {
     /*screenRender.resize(height * blockTextureSize, std::vector<RenderTile>(width * blockTextureSize, { BLACK }));
     previousScreenRender.resize(height * blockTextureSize, std::vector<RenderTile>(width * blockTextureSize, { BLACK }));*/
@@ -156,9 +158,11 @@ void updateScreenRender() {
     std::cout << "\033[" << screenRender.size() << ";1H";
 
     // calculate frame render time
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-    std::cout << duration.count() << " milliseconds";
+    if (SHOW_DEBUG) {
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+        std::cout << duration.count() << " milliseconds";
+    }
 }
 
 void forcePixelChange(Color color, Vector2 position, std::string content) {
