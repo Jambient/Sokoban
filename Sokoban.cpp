@@ -6,102 +6,13 @@
 #include "blocks.h"
 #include "rendering.h"
 #include "ansi.h"
+#include "levels.h"
+#include "ascii.h"
 #include <vector>
 
 using namespace std;
 
 int currentLevelUnlock = 0;
-
-void FloodFillRecursive(Map level, Vector2 position) {
-    if (level.Get(position.x, position.y) != MapTile::EMPTY) { return; }
-    level.Set(position.x, position.y, MapTile::FLOOR);
-
-    FloodFillRecursive(level, { position.x + 1, position.y });
-    FloodFillRecursive(level, { position.x - 1, position.y });
-    FloodFillRecursive(level, { position.x, position.y + 1 });
-    FloodFillRecursive(level, { position.x, position.y - 1 });
-}
-
-Level LoadLevel(int levelNumber) 
-{
-    string filePath = "Levels/Level" + to_string(levelNumber) + ".txt";
-    string textLine;
-    ifstream rawLevelData(filePath);
-
-    // get map height and width to create map
-    int mapWidth = 0;
-    int mapHeight = 0;
-
-    for (mapHeight = 0; getline(rawLevelData, textLine); mapHeight++) {
-        if (textLine.size() > mapWidth) {
-            mapWidth = textLine.size();
-        }
-    }
-
-    Map levelBase(mapWidth, mapHeight);
-    vector<PushableBox> boxes;
-    Vector2 playerPosition;
-    vector<Vector2> goals;
-
-    // reset getline() function
-    rawLevelData.clear();
-    rawLevelData.seekg(0);
-
-    // create level data
-    int currentLineIndex = 0;
-    while (getline(rawLevelData, textLine)) {
-        for (int i = 0; i < textLine.size(); i++) {
-            char symbol = textLine[i];
-            if (symbol == '#') {
-                levelBase.Set(i, currentLineIndex, MapTile::WALL);
-            }
-            else if (symbol == '@') {
-                playerPosition = {i, currentLineIndex};
-            }
-            else if (symbol == '$') {
-                boxes.push_back({ {i, currentLineIndex} });
-            }
-            else if (symbol == '.') {
-                goals.push_back({ i, currentLineIndex });
-            }
-            else if (symbol == '*') {
-                goals.push_back({ i, currentLineIndex });
-                boxes.push_back({ {i, currentLineIndex} });
-            }
-            else if (symbol == '+') {
-                goals.push_back({ i, currentLineIndex });
-                playerPosition = { i, currentLineIndex };
-            }
-        }
-
-        currentLineIndex++;
-    }
-
-    // generate floor tiles for the map
-    FloodFillRecursive(levelBase, playerPosition);
-
-    // close file
-    rawLevelData.close();
-
-    // update screen render
-    resizeScreenRender(levelBase.GetWidth(), levelBase.GetHeight());
-
-    // build level data
-    Level levelData(levelBase, boxes, goals, playerPosition);
-
-    return levelData;
-}
-
-int getBoxIndexAtPosition(Level levelData, Vector2 position) {
-    for (int i = 0; i < levelData.boxes.size(); i++) {
-        PushableBox box = levelData.boxes[i];
-        if (box.position.x == position.x && box.position.y == position.y) {
-            return i;
-        }
-    }
-
-    return -1;
-}
 
 void handleMovement(Level& levelData, Vector2 direction) {
     Vector2 nextPosition = { levelData.playerPosition.x + direction.x, levelData.playerPosition.y + direction.y };
@@ -124,206 +35,6 @@ void handleMovement(Level& levelData, Vector2 direction) {
     levelData.playerPosition = nextPosition;
 }
 
-bool isLevelSolved(Level levelData) {
-    bool isSolved = true;
-    for (Vector2 goalPos : levelData.goals) {
-        int furtherBoxIndex = getBoxIndexAtPosition(levelData, goalPos);
-        if (furtherBoxIndex == -1) { isSolved = false; }
-    }
-    return isSolved;
-}
-
-void showStartScreen() {
-    cout << ".----------------.  .----------------.  .----------------.  .----------------.  .----------------.  .----------------.  .-----------------." << endl
-        << "| .--------------. || .--------------. || .--------------. || .--------------. || .--------------. || .--------------. || .--------------. |" << endl
-        << "| |    _______   | || |     ____     | || |  ___  ____   | || |     ____     | || |   ______     | || |      __      | || | ____  _____  | |" << endl
-        << "| |   /  ___  |  | || |   .'    `.   | || | |_  ||_  _|  | || |   .'    `.   | || |  |_   _ \\    | || |     /  \\     | || ||_   \\ |_  _| | |" << endl
-        << "| |  |  (__ \\_|  | || |  /  .--.  \\  | || |   | |_/ /    | || |  /  .--.  \\  | || |    | |_) |   | || |    / /\\ \\    | || |  |   \\ | |   | |" << endl
-        << "| |   '.___`-.   | || |  | |    | |  | || |   |  __'.    | || |  | |    | |  | || |    |  __'.   | || |   / ____ \\   | || |  | |\\ \\| |   | |" << endl
-        << "| |  |`\\____) |  | || |  \\  `--'  /  | || |  _| |  \\ \\_  | || |  \\  `--'  /  | || |   _| |__) |  | || | _/ /    \\ \\_ | || | _| |_\\   |_  | |" << endl
-        << "| |  |_______.'  | || |   `.____.'   | || | |____||____| | || |   `.____.'   | || |  |_______/   | || ||____|  |____|| || ||_____|\\____| | |" << endl
-        << "| |              | || |              | || |              | || |              | || |              | || |              | || |              | |" << endl
-        << "| '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' |" << endl
-        << " '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------'" << endl << endl;
-
-    cout << "Press enter to continue...";
-    cin.ignore();
-}
-
-string asciiNumbers[10][6] = {
-    {
-        " _____ ",
-        "|  _  |",
-        "| |/' |",
-        "|  /| |",
-        "\\ |_/ /",
-        " \\___/ "
-    },
-    {
-        " __  ",
-        "/  | ",
-        "`| | ",
-        " | | ",
-        "_| |_",
-        "\\___/"
-    },
-    {
-        " _____ ",
-        "/ __  \\",
-        "`' / /'",
-        "  / /  ",
-        "./ /___",
-        "\\_____/"
-    },
-    {
-        " _____ ",
-        "|____ |",
-        "    / /",
-        "    \\ \\",
-        ".___/ /",
-        "\\____/ "
-    },
-    {
-        "   ___ ",
-        "  /   |",
-        " / /| |",
-        "/ /_| |",
-        "\\___  |",
-        "    |_/"
-    },
-    {
-        " _____ ",
-        "|  ___|",
-        "|___ \\ ",
-        "    \\ \\",
-        "/\\__/ /",
-        "\\____/ "
-    },
-    {
-        "  ____ ",
-        " / ___|",
-        "/ /___ ",
-        "| ___ \\",
-        "| \\_/ |",
-        "\\_____/"
-    },
-    {
-        " ______",
-        "|___  /",
-        "   / / ",
-        "  / /  ",
-        "./ /   ",
-        "\\_/    "
-    },
-    {
-        " _____ ",
-        "|  _  |",
-        " \\ V / ",
-        " / _ \\ ",
-        "| |_| |",
-        "\\_____/"
-    },
-    {
-        " _____ ",
-        "|  _  |",
-        "| |_| |",
-        "\\____ |",
-        ".___/ /",
-        "\\____/ "
-    }
-};
-
-int printNumber(int num, Vector2 position) {
-    int longestLine = 0;
-    for (int i = 0; i < 6; i++) {
-        string line = asciiNumbers[num][i];
-        cout << moveCursorToPosition({ position.x, position.y + i });
-        cout << line;
-        if (line.size() > longestLine) {
-            longestLine = line.size();
-        }
-    }
-    return longestLine;
-}
-
-void showMoves(Level levelData, int moves) {
-    string numStr = to_string(moves);
-    int xPos = 1;
-    int yPos = (levelData.levelBase.GetHeight() + 1) * blockTextureSize;
-
-    for (int i = numStr.size(); i < 4; i++) {
-        numStr.insert(numStr.begin(), '0');
-    }
-
-    for (int y = 0; y < 6; y++) {
-        cout << moveCursorToPosition({ xPos, yPos + y });
-        cout << string(50, ' ');
-    }
-
-    int totalNumLength = 0;
-    for (char c : numStr) {
-        totalNumLength += printNumber(c - '0', { xPos + totalNumLength + 2, yPos });
-    }
-    cout << moveCursorToPosition({ xPos, yPos - 1 });
-    cout << "NUMBER OF MOVES:";
-}
-
-string* numberToAscii(int num) {
-    static string ascii[6];
-    string numStr = to_string(num);
-    int longestLine = 0;
-
-    if (numStr.length() < 2) {
-        numStr.insert(numStr.begin(), '0');
-    }
-
-    //// get first number longest line
-    //for (int i = 0; i < 6; i++) {
-    //    int lineLength = asciiNumbers[numStr[0] - '0'][i].length();
-    //    if (lineLength > longestLine) {
-    //        longestLine = lineLength;
-    //    }
-    //}
-
-    //// create first number
-    //for (int i = 0; i < 6; i++) {
-    //    string line = asciiNumbers[numStr[0] - '0'][i];
-    //    ascii[i] = line + string((longestLine - line.length()) + 1, ' ');
-    //}
-    //
-    //// create second number
-    //for (int i = 0; i < 6; i++) {
-    //    string line = asciiNumbers[numStr[1] - '0'][i];
-    //    ascii[i] += line;
-    //}
-    for (int i = 0; i < 6; i++) {
-        ascii[i] = asciiNumbers[numStr[0] - '0'][i] + ' ' + asciiNumbers[numStr[1] - '0'][i];
-    }
-
-    return ascii;
-}
-
-void renderLevelStatusPixels(Level levelData) {
-    for (int y = 0; y < 3; y++) {
-        for (int x = 0; x < 5; x++) {
-            Vector2 pixelPos = { (2 + x * 2) * blockTextureSize + 2, (2 + y * 2) * blockTextureSize + 2 };
-            if ((pixelPos.x - 2) / blockTextureSize == levelData.playerPosition.x && (pixelPos.y - 2) / blockTextureSize == levelData.playerPosition.y) {
-                continue;
-            }
-            Color pixelColor = { 0, 200, 0 };
-            int levelNum = ((pixelPos.x - 4) / blockTextureSize) / 2 + 1 + 5 * (((pixelPos.y - 4) / blockTextureSize) / 2);
-            if (levelNum == currentLevelUnlock + 1) {
-                pixelColor = { 50, 50, 255 };
-            }
-            else  if (levelNum > currentLevelUnlock + 1) {
-                pixelColor = { 200, 0, 0 };
-            }
-
-            forcePixelChange(pixelColor, pixelPos, "  ");
-        }
-    }
-}
-
 int showLevelMenu() {
     Level levelData = LoadLevel(0);
     bool hasChosenLevel = false;
@@ -332,14 +43,14 @@ int showLevelMenu() {
     bool wasKeyPressed = false;
 
     renderLevel(levelData, false);
-    renderLevelStatusPixels(levelData);
+    renderLevelStatusPixels(levelData, currentLevelUnlock);
     updateScreenRender();
 
     while (!hasChosenLevel) {
         if (!(levelData.playerPosition.x == previousPlayerPosition.x && levelData.playerPosition.y == previousPlayerPosition.y)) {
             renderLevel(levelData, false);
-            renderLevelStatusPixels(levelData);
-            //renderLighting({levelData.playerPosition.x * blockTextureSize + 2, levelData.playerPosition.y * blockTextureSize + 2}, 20);
+            renderLevelStatusPixels(levelData, currentLevelUnlock);
+            //renderLighting({ levelData.playerPosition.x * blockTextureSize + 2, levelData.playerPosition.y * blockTextureSize + 2 }, 20);
 
             if (levelData.playerPosition.x % 2 == 0 && levelData.playerPosition.y % 2 == 0) {
                 chosenLevelNum = (levelData.playerPosition.x - 2) / 2 + 1 + 5 * ((levelData.playerPosition.y - 2) / 2);
@@ -403,7 +114,7 @@ int showLevelMenu() {
         else if ((GetKeyState('F') & 0x8000)) { // fix button incase rendering breaks (when resizing screen)
             resetRendering();
             renderLevel(levelData, false);
-            renderLevelStatusPixels(levelData);
+            renderLevelStatusPixels(levelData, currentLevelUnlock);
             updateScreenRender();
             wasKeyPressed = true;
         }
@@ -426,26 +137,6 @@ void loadUserData() {
     }
     userData.close();
 }
-
-vector<string> levelCompleteUI = {
-    /*"*--------------------------------------------------------*",
-    "|  _____ ________  _________ _      _____ _____ ___________",
-    "| /  __ \\  _  |  \\/  || ___ \\ |    |  ___|_   _|  ___|  _  \\",
-    "| | /  \\/ | | | .  . || |_/ / |    | |__   | | | |__ | | | |",
-    "| | |   | | | | |\\/| ||  __/| |    |  __|  | | |  __|| | | |",
-    "| | \\__/\\ \\_/ / |  | || |   | |____| |___  | | | |___| |/ /",
-    "|  \\____/\\___/\\_|  |_/\\_|   \\_____/\\____/  \\_/ \\____/|___/",
-    "*--------------------------------------------------------*"*/
-    "*----------------------------------------------------*",
-    "| ______ _____ _   _ _____ _____ _   _  ___________  |" ,
-    "| |  ___|_   _| \\ | |_   _/  ___| | | ||  ___|  _  \\ |",
-    "| | |_    | | |  \\| | | | \\ `--.| |_| || |__ | | | | |",
-    "| |  _|   | | | . ` | | |  `--. \\  _  ||  __|| | | | |",
-    "| | |    _| |_| |\\  |_| |_/\\__/ / | | || |___| |/ /  |",
-    "| \\_|    \\___/\\_| \\_/\\___/\\____/\\_| |_/\\____/|___/   |",
-    "|                                                    |",
-    "*----------------------------------------------------*"
-};
 
 int main()
 {
@@ -534,7 +225,7 @@ int main()
 
             for (int y = 0; y < levelData.levelBase.GetHeight() * blockTextureSize; y++) {
                 for (int x = 0; x < levelData.levelBase.GetWidth() * blockTextureSize; x++) {
-                    if (x % 2 == 0) {
+                    if (x % 5 == 0) {
                         Sleep(2);
                     }
                     forcePixelChange({ 1, 1, 1 }, { x, y }, "  ");

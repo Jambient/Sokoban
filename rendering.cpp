@@ -6,6 +6,7 @@
 #include "rendering.h"
 #include "blocks.h"
 #include "ansi.h"
+#include "ascii.h"
 
 struct RenderTile {
     Color color;
@@ -216,6 +217,85 @@ void renderLighting(Vector2 lightPosition, int lightStrength) {
             Color currentColor = screenRender[y][x].color;
             Color newColor = { (currentColor.r * colorValue) / 255, (currentColor.g * colorValue) / 255, (currentColor.b * colorValue) / 255 };
             forcePixelChange(newColor, { x, y }, "  ");
+        }
+    }
+}
+
+void applyBlur(int strength) {
+    int boxSize = 1 + 2 * strength;
+    int width = screenRender[0].size();
+    int height = screenRender.size();
+
+    std::vector<std::vector<RenderTile>> tempRender(screenRender);
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            Color boxSum;
+
+            for (int j = -strength; j < boxSize; j++) {
+                for (int i = -strength; i < boxSize; i++) {
+                    if (x + i >= 0 && x + i < width && y + j >= 0 && y + j < height) {
+                        Color pixelColor = screenRender[y + j][x + i].color;
+                        boxSum.r += pixelColor.r;
+                        boxSum.g += pixelColor.g;
+                        boxSum.b += pixelColor.b;
+                    }
+                }
+            }
+
+            boxSum.r /= boxSize * boxSize;
+            boxSum.g /= boxSize * boxSize;
+            boxSum.b /= boxSize * boxSize;
+
+            tempRender[y][x] = { boxSum };
+        }
+    }
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            forcePixelChange(tempRender[y][x].color, {x, y}, "  ");
+        }
+    }
+}
+
+void showMoves(Level levelData, int moves) {
+    std::string numStr = std::to_string(moves);
+    int xPos = 1;
+    int yPos = (levelData.levelBase.GetHeight() + 1) * blockTextureSize;
+
+    for (int i = numStr.size(); i < 4; i++) {
+        numStr.insert(numStr.begin(), '0');
+    }
+
+    for (int y = 0; y < 6; y++) {
+        std::cout << moveCursorToPosition({ xPos, yPos + y });
+        std::cout << std::string(50, ' ');
+    }
+
+    int totalNumLength = 0;
+    for (char c : numStr) {
+        totalNumLength += printNumber(c - '0', { xPos + totalNumLength + 2, yPos });
+    }
+    std::cout << moveCursorToPosition({ xPos, yPos - 1 });
+    std::cout << "NUMBER OF MOVES:";
+}
+
+void renderLevelStatusPixels(Level levelData, int currentLevelUnlock) {
+    for (int y = 0; y < 3; y++) {
+        for (int x = 0; x < 5; x++) {
+            Vector2 pixelPos = { (2 + x * 2) * blockTextureSize + 2, (2 + y * 2) * blockTextureSize + 2 };
+            if ((pixelPos.x - 2) / blockTextureSize == levelData.playerPosition.x && (pixelPos.y - 2) / blockTextureSize == levelData.playerPosition.y) {
+                continue;
+            }
+            Color pixelColor = { 0, 200, 0 };
+            int levelNum = ((pixelPos.x - 4) / blockTextureSize) / 2 + 1 + 5 * (((pixelPos.y - 4) / blockTextureSize) / 2);
+            if (levelNum == currentLevelUnlock + 1) {
+                pixelColor = { 50, 50, 255 };
+            }
+            else  if (levelNum > currentLevelUnlock + 1) {
+                pixelColor = { 200, 0, 0 };
+            }
+
+            forcePixelChange(pixelColor, pixelPos, "  ");
         }
     }
 }

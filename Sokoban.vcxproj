@@ -128,13 +128,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ansi.cpp" />
+    <ClCompile Include="ascii.cpp" />
     <ClCompile Include="blocks.cpp" />
+    <ClCompile Include="levels.cpp" />
     <ClCompile Include="rendering.cpp" />
     <ClCompile Include="Sokoban.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ansi.h" />
+    <ClInclude Include="ascii.h" />
     <ClInclude Include="blocks.h" />
+    <ClInclude Include="levels.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="rendering.h" />
   </ItemGroup>

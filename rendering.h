@@ -17,3 +17,9 @@ void forcePixelChange(Color color, Vector2 position, std::string content);
 void showUI(std::vector<std::string>& lines);
 
 void renderLighting(Vector2 lightPosition, int lightStrength);
+
+void applyBlur(int strength);
+
+void showMoves(Level levelData, int moves);
+
+void renderLevelStatusPixels(Level levelData, int currentLevelUnlock);
