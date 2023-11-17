@@ -41,6 +41,7 @@ int showLevelMenu() {
     int chosenLevelNum = 0;
     Vector2 previousPlayerPosition = levelData.playerPosition;
     bool wasKeyPressed = false;
+    bool isRenderingLighting = false;
 
     renderLevel(levelData, false);
     renderLevelStatusPixels(levelData, currentLevelUnlock);
@@ -50,7 +51,9 @@ int showLevelMenu() {
         if (!(levelData.playerPosition.x == previousPlayerPosition.x && levelData.playerPosition.y == previousPlayerPosition.y)) {
             renderLevel(levelData, false);
             renderLevelStatusPixels(levelData, currentLevelUnlock);
-            //renderLighting({ levelData.playerPosition.x * blockTextureSize + 2, levelData.playerPosition.y * blockTextureSize + 2 }, 20);
+            if (isRenderingLighting) {
+                renderLighting({ levelData.playerPosition.x * blockTextureSize + 2, levelData.playerPosition.y * blockTextureSize + 2 }, 20);
+            }
 
             if (levelData.playerPosition.x % 2 == 0 && levelData.playerPosition.y % 2 == 0) {
                 chosenLevelNum = (levelData.playerPosition.x - 2) / 2 + 1 + 5 * ((levelData.playerPosition.y - 2) / 2);
@@ -95,33 +98,37 @@ int showLevelMenu() {
         previousPlayerPosition.x = levelData.playerPosition.x;
         previousPlayerPosition.y = levelData.playerPosition.y;
 
+        wasKeyPressed = true;
         if ((GetKeyState('W') & 0x8000)) {
             handleMovement(levelData, { 0, -1 });
-            wasKeyPressed = true;
         }
         else if ((GetKeyState('S') & 0x8000)) {
             handleMovement(levelData, { 0, 1 });
-            wasKeyPressed = true;
         }
         else if ((GetKeyState('A') & 0x8000)) {
             handleMovement(levelData, { -1, 0 });
-            wasKeyPressed = true;
         }
         else if ((GetKeyState('D') & 0x8000)) {
             handleMovement(levelData, { 1, 0 });
-            wasKeyPressed = true;
         }
         else if ((GetKeyState('F') & 0x8000)) { // fix button incase rendering breaks (when resizing screen)
             resetRendering();
             renderLevel(levelData, false);
             renderLevelStatusPixels(levelData, currentLevelUnlock);
             updateScreenRender();
-            wasKeyPressed = true;
+            isRenderingLighting = false;
+        }
+        else if ((GetKeyState('L') & 0x8000)) {
+            isRenderingLighting = !isRenderingLighting;
+            previousPlayerPosition.x--;
         }
         else if ((GetKeyState(VK_RETURN) & 0x8000)) {
             if (levelData.playerPosition.x % 2 == 0 && levelData.playerPosition.y % 2 == 0 && chosenLevelNum <= currentLevelUnlock + 1) {
                 hasChosenLevel = true;
             }
+        }
+        else {
+            wasKeyPressed = false;
         }
     }
 
@@ -150,6 +157,7 @@ int main()
     bool wasKeyPressed;
     int moves;
     bool hasQuitLevel;
+    bool isRenderingLighting = false;
     
     while (true) {
         int chosenLevel = showLevelMenu();
@@ -170,7 +178,11 @@ int main()
 
         while (!isLevelSolved(levelData) && !hasQuitLevel) {
             if (!(levelData.playerPosition.x == previousPlayerPosition.x && levelData.playerPosition.y == previousPlayerPosition.y)) {
-                renderLevel(levelData);
+                renderLevel(levelData, false);
+                if (isRenderingLighting) {
+                    renderLighting({ levelData.playerPosition.x * blockTextureSize + 2, levelData.playerPosition.y * blockTextureSize + 2 }, 20);
+                }
+                updateScreenRender();
 
                 moves += 1;
                 showMoves(levelData, moves);
@@ -184,44 +196,55 @@ int main()
             previousPlayerPosition.x = levelData.playerPosition.x;
             previousPlayerPosition.y = levelData.playerPosition.y;
 
+            wasKeyPressed = true;
             if ((GetKeyState('W') & 0x8000)) {
                 handleMovement(levelData, { 0, -1 });
-                wasKeyPressed = true;
             }
             else if ((GetKeyState('S') & 0x8000)) {
                 handleMovement(levelData, { 0, 1 });
-                wasKeyPressed = true;
             }
             else if ((GetKeyState('A') & 0x8000)) {
                 handleMovement(levelData, { -1, 0 });
-                wasKeyPressed = true;
             }
             else if ((GetKeyState('D') & 0x8000)) {
                 handleMovement(levelData, { 1, 0 });
-                wasKeyPressed = true;
             }
             else if ((GetKeyState('R') & 0x8000)) { // reset level
                 levelData = LoadLevel(levelNum);
                 moves = 0;
-                renderLevel(levelData);
+                renderLevel(levelData, true);
                 showMoves(levelData, moves);
                 previousPlayerPosition.x = levelData.playerPosition.x;
                 previousPlayerPosition.y = levelData.playerPosition.y;
-                wasKeyPressed = true;
+                isRenderingLighting = false;
             }
             else if ((GetKeyState('F') & 0x8000)) { // fix button incase rendering breaks (when resizing screen)
                 resetRendering();
                 renderLevel(levelData);
                 showMoves(levelData, moves);
-                wasKeyPressed = true;
+                isRenderingLighting = false;
+            }
+            else if ((GetKeyState('L') & 0x8000)) {
+                isRenderingLighting = !isRenderingLighting;
+                renderLevel(levelData, false);
+                if (isRenderingLighting) {
+                    renderLighting({ levelData.playerPosition.x * blockTextureSize + 2, levelData.playerPosition.y * blockTextureSize + 2 }, 20);
+                }
+                updateScreenRender();
             }
             else if ((GetKeyState(VK_BACK) & 0x8000)) { // leave level
                 hasQuitLevel = true;
             }
+            else {
+                wasKeyPressed = false;
+            }
         }
 
         if (!hasQuitLevel) {
-            renderLevel(levelData);
+            renderLevel(levelData, false);
+            if (isRenderingLighting) {
+                renderLighting({ levelData.playerPosition.x * blockTextureSize + 2, levelData.playerPosition.y * blockTextureSize + 2 }, 20);
+            }
 
             for (int y = 0; y < levelData.levelBase.GetHeight() * blockTextureSize; y++) {
                 for (int x = 0; x < levelData.levelBase.GetWidth() * blockTextureSize; x++) {
