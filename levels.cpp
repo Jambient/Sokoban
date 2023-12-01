@@ -1,10 +1,16 @@
 #include <string>
 #include <fstream>
 #include <vector>
-#include "main.h"
+#include "common.h"
 #include "levels.h"
 #include "rendering.h"
 
+/**
+* Recursively flood fills a level starting from the given position.
+*
+* @param level - Map data for the level.
+* @param position - The starting position.
+*/
 void FloodFillRecursive(Map level, Vector2 position) {
     if (level.Get(position.x, position.y) != MapTile::EMPTY) { return; }
     level.Set(position.x, position.y, MapTile::FLOOR);
@@ -17,6 +23,7 @@ void FloodFillRecursive(Map level, Vector2 position) {
 
 Level LoadLevel(int levelNumber)
 {
+    // load raw level data from text file
     std::string filePath = "Levels/Level" + std::to_string(levelNumber) + ".txt";
     std::string textLine;
     std::ifstream rawLevelData(filePath);

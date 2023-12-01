@@ -1,4 +1,5 @@
 #include "blocks.h"
+#include "common.h"
 
 Block blocks[6];
 

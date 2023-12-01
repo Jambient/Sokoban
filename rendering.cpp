@@ -2,12 +2,13 @@
 #include <vector>
 #include <windows.h>
 #include <chrono>
-#include "main.h"
+#include "common.h"
 #include "rendering.h"
 #include "blocks.h"
 #include "ansi.h"
 #include "ascii.h"
 
+// structs only used by this file
 struct RenderTile {
     Color color;
     std::string content = "  ";
@@ -18,6 +19,7 @@ struct ChangedTile {
     Vector2 position;
 };
 
+// variables only used by this file
 std::vector<std::vector<RenderTile>> screenRender;
 std::vector<std::vector<RenderTile>> previousScreenRender;
 std::vector<ChangedTile> changedTiles;
@@ -26,9 +28,6 @@ Color BLACK = { 0, 0, 0 };
 bool SHOW_DEBUG = false;
 
 void resizeScreenRender(int width, int height) {
-    /*screenRender.resize(height * blockTextureSize, std::vector<RenderTile>(width * blockTextureSize, { BLACK }));
-    previousScreenRender.resize(height * blockTextureSize, std::vector<RenderTile>(width * blockTextureSize, { BLACK }));*/
-
     screenRender.clear();
     previousScreenRender.clear();
 
@@ -43,6 +42,12 @@ void resizeScreenRender(int width, int height) {
     }
 }
 
+/**
+* Draws a block texture to the screen at the given position.
+*
+* @param blockData - The block data containing the texture.
+* @param position - The position the top left of the texture should be drawn at.
+*/
 void drawTextureToScreen(Block blockData, Vector2 position) {
     for (int i = 0; i < blockTextureSize; i++) {
         for (int j = 0; j < blockTextureSize; j++) {
@@ -273,7 +278,7 @@ void showMoves(Level levelData, int moves) {
 
     int totalNumLength = 0;
     for (char c : numStr) {
-        totalNumLength += printNumber(c - '0', { xPos + totalNumLength + 2, yPos });
+        totalNumLength += printDigit(c - '0', { xPos + totalNumLength + 2, yPos });
     }
     std::cout << moveCursorToPosition({ xPos, yPos - 1 });
     std::cout << "NUMBER OF MOVES:";

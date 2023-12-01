@@ -19,8 +19,11 @@ struct Color {
 	int b = 0;
 };
 
-class Map {
+struct UserData {
+	int currentLevelUnlock;
+};
 
+class Map {
 private:
 	int _mapWidth, _mapHeight;
 	MapTile* world;

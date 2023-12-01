@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include "ascii.h"
-#include "main.h"
+#include "common.h"
 #include "ansi.h"
 
 std::string asciiNumbers[10][6] = {
@@ -104,13 +104,13 @@ void showStartScreen() {
     std::cin.ignore();
 }
 
-int printNumber(int num, Vector2 position) {
+int printDigit(int digit, Vector2 position) {
     for (int i = 0; i < 6; i++) {
-        std::string line = asciiNumbers[num][i];
+        std::string line = asciiNumbers[digit][i];
         std::cout << moveCursorToPosition({ position.x, position.y + i });
         std::cout << line;
     }
-    return asciiNumbers[num][0].size();
+    return asciiNumbers[digit][0].size();
 }
 
 std::string* numberToAscii(int num) {

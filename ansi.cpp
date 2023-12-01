@@ -1,5 +1,5 @@
 #include <string>
-#include "main.h"
+#include "common.h"
 #include "ansi.h"
 
 std::string getResetModifier() {
