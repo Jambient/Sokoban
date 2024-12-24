@@ -25,7 +25,7 @@ std::vector<std::vector<RenderTile>> previousScreenRender;
 std::vector<ChangedTile> changedTiles;
 Color BLACK = { 0, 0, 0 };
 
-bool SHOW_DEBUG = false;
+bool SHOW_DEBUG = true;
 
 void resizeScreenRender(int width, int height) {
     screenRender.clear();
@@ -262,8 +262,8 @@ void applyBlur(int strength) {
     }
 }
 
-void showMoves(Level levelData, int moves) {
-    std::string numStr = std::to_string(moves);
+void showMoves(Level& levelData) {
+    std::string numStr = std::to_string(levelData.moveCount);
     int xPos = 1;
     int yPos = (levelData.levelBase.GetHeight() + 1) * blockTextureSize;
 

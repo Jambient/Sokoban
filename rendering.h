@@ -71,7 +71,7 @@ void applyBlur(int strength);
 * @param levelData - The level data of the current level.
 * @param moves - The number of moves to display.
 */
-void showMoves(Level levelData, int moves);
+void showMoves(Level& levelData);
 
 /**
 * Renders level status pixels that show the current state of a level by a color.

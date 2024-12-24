@@ -69,11 +69,15 @@ struct Level {
 	std::vector<PushableBox> boxes;
 	Vector2 playerPosition;
 	std::vector<Vector2> goals;
+	int moveCount;
+	int levelNum;
 
-	Level(Map levelBase_, std::vector<PushableBox> boxes_, std::vector<Vector2> goals_, Vector2 playerPosition_) {
+	Level(Map levelBase_, std::vector<PushableBox> boxes_, std::vector<Vector2> goals_, Vector2 playerPosition_, int levelNum_) {
 		levelBase = levelBase_;
 		boxes = boxes_;
 		playerPosition = playerPosition_;
 		goals = goals_;
+		moveCount = 0;
+		levelNum = levelNum_;
 	}
 };

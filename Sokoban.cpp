@@ -8,45 +8,16 @@
 #include "ansi.h"
 #include "levels.h"
 #include "ascii.h"
+#include "commands.h"
 #include <vector>
+#include <stack>
+#include <memory>
 
 using namespace std;
 
 // a global storing the users data
 UserData userData;
-
-/**
-* Handle the movement of the player based on a given movement direction.
-*
-* @param levelData The data for the current level.
-* @param direction The direction the player should attempt to move in.
-*/
-void handleMovement(Level& levelData, Vector2 direction) {
-    Vector2 nextPosition = { levelData.playerPosition.x + direction.x, levelData.playerPosition.y + direction.y };
-    Vector2 furtherNextPosition = { levelData.playerPosition.x + direction.x * 2, levelData.playerPosition.y + direction.y * 2 };
-
-    // check that the tile the player is trying to move into is not a wall
-    MapTile nextBlock = levelData.levelBase.Get(nextPosition.x, nextPosition.y);
-    if (nextBlock == MapTile::WALL) { return; }
-
-    // check if the player is attempting to push a box
-    int boxIndex = getBoxIndexAtPosition(levelData, nextPosition);
-    if (boxIndex != -1) {
-        // make sure the box is not being pushed into another box
-        int furtherBoxIndex = getBoxIndexAtPosition(levelData, furtherNextPosition);
-        if (furtherBoxIndex != -1) { return; }
-
-        // make sure the box is not being pushed into a wall
-        MapTile furtherNextBlock = levelData.levelBase.Get(furtherNextPosition.x, furtherNextPosition.y);
-        if (furtherNextBlock == MapTile::WALL) { return; }
-
-        // update the box position
-        levelData.boxes[boxIndex].position = furtherNextPosition;
-    }
-
-    // update the player position
-    levelData.playerPosition = nextPosition;
-}
+std::stack<std::unique_ptr<Command>> commandStack;
 
 /**
 * Displays the level selection menu.
@@ -126,16 +97,20 @@ int showLevelMenu() {
         // get key pressed
         wasKeyPressed = true;
         if ((GetKeyState('W') & 0x8000)) {
-            handleMovement(levelData, { 0, -1 });
+            std::unique_ptr<Command> command = std::make_unique<MoveCommand>(Vector2{ 0, -1 });
+            command->Execute(levelData);
         }
         else if ((GetKeyState('S') & 0x8000)) {
-            handleMovement(levelData, { 0, 1 });
+            std::unique_ptr<Command> command = std::make_unique<MoveCommand>(Vector2{ 0, 1 });
+            command->Execute(levelData);
         }
         else if ((GetKeyState('A') & 0x8000)) {
-            handleMovement(levelData, { -1, 0 });
+            std::unique_ptr<Command> command = std::make_unique<MoveCommand>(Vector2{ -1, 0 });
+            command->Execute(levelData);
         }
         else if ((GetKeyState('D') & 0x8000)) {
-            handleMovement(levelData, { 1, 0 });
+            std::unique_ptr<Command> command = std::make_unique<MoveCommand>(Vector2{ 1, 0 });
+            command->Execute(levelData);
         }
         else if ((GetKeyState('F') & 0x8000)) { // fix button incase rendering breaks (when resizing screen)
             resetRendering();
@@ -193,7 +168,6 @@ int main()
 
     Vector2 previousPlayerPosition;
     bool wasKeyPressed;
-    int moves;
     bool hasQuitLevel;
     bool isRenderingLighting = false;
     
@@ -203,20 +177,22 @@ int main()
         int chosenLevel = showLevelMenu();
 
         // play level
-        int levelNum = chosenLevel;
-        Level levelData = LoadLevel(levelNum);
+        Level levelData = LoadLevel(chosenLevel);
 
         // reset game variables
         previousPlayerPosition = levelData.playerPosition;
         wasKeyPressed = false;
         hasQuitLevel = false;
-        moves = 0;
 
         // intial screen render
         resetRendering();
         clearScreen();
         renderLevel(levelData);
-        showMoves(levelData, moves);
+        showMoves(levelData);
+
+        while (!commandStack.empty()) {
+            commandStack.pop();
+        }
 
         // loop until the level has been solved or the user has quit the level
         while (!isLevelSolved(levelData) && !hasQuitLevel) {
@@ -227,9 +203,7 @@ int main()
                     renderLighting({ levelData.playerPosition.x * blockTextureSize + 2, levelData.playerPosition.y * blockTextureSize + 2 }, 20);
                 }
                 updateScreenRender();
-
-                moves += 1;
-                showMoves(levelData, moves);
+                showMoves(levelData);
             }
 
             // delay inputs if key was pressed last loop
@@ -245,22 +219,39 @@ int main()
             // get key pressed
             wasKeyPressed = true;
             if ((GetKeyState('W') & 0x8000)) {
-                handleMovement(levelData, { 0, -1 });
+                std::unique_ptr<Command> command = std::make_unique<MoveCommand>(Vector2{ 0, -1 });
+                command->Execute(levelData);
+                commandStack.push(std::move(command));
             }
             else if ((GetKeyState('S') & 0x8000)) {
-                handleMovement(levelData, { 0, 1 });
+                std::unique_ptr<Command> command = std::make_unique<MoveCommand>(Vector2{ 0, 1 });
+                command->Execute(levelData);
+                commandStack.push(std::move(command));
             }
             else if ((GetKeyState('A') & 0x8000)) {
-                handleMovement(levelData, { -1, 0 });
+                std::unique_ptr<Command> command = std::make_unique<MoveCommand>(Vector2{ -1, 0 });
+                command->Execute(levelData);
+                commandStack.push(std::move(command));
             }
             else if ((GetKeyState('D') & 0x8000)) {
-                handleMovement(levelData, { 1, 0 });
+                std::unique_ptr<Command> command = std::make_unique<MoveCommand>(Vector2{ 1, 0 });
+                command->Execute(levelData);
+                commandStack.push(std::move(command));
+            }
+            else if ((GetKeyState('Z') & 0x8000)) {
+                if (!commandStack.empty()) {
+                    std::unique_ptr<Command> command = std::move(commandStack.top());
+                    commandStack.pop();
+                    command->Undo(levelData);
+                }
             }
             else if ((GetKeyState('R') & 0x8000)) { // reset level
-                levelData = LoadLevel(levelNum);
-                moves = 0;
+                std::unique_ptr<Command> command = std::make_unique<ResetCommand>();
+                command->Execute(levelData);
+                commandStack.push(std::move(command));
+
                 renderLevel(levelData, true);
-                showMoves(levelData, moves);
+                showMoves(levelData);
                 previousPlayerPosition.x = levelData.playerPosition.x;
                 previousPlayerPosition.y = levelData.playerPosition.y;
                 isRenderingLighting = false;
@@ -268,7 +259,7 @@ int main()
             else if ((GetKeyState('F') & 0x8000)) { // fix button incase rendering breaks (when resizing screen)
                 resetRendering();
                 renderLevel(levelData);
-                showMoves(levelData, moves);
+                showMoves(levelData);
                 isRenderingLighting = false;
             }
             else if ((GetKeyState('L') & 0x8000)) { // toggle lighting

@@ -87,7 +87,7 @@ Level LoadLevel(int levelNumber)
     resizeScreenRender(levelBase.GetWidth(), levelBase.GetHeight());
 
     // build level data
-    Level levelData(levelBase, boxes, goals, playerPosition);
+    Level levelData(levelBase, boxes, goals, playerPosition, levelNumber);
 
     return levelData;
 }
